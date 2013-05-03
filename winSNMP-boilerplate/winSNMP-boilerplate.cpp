@@ -2,6 +2,27 @@
 //
 
 #include "stdafx.h"
+struct SNMP_worker
+{
+	void run(/* params */) {}
+};
+
+SNMPAPI_STATUS CALLBACK SNcallback(
+        HSNMP_SESSION SNsession
+    , HWND          hWnd
+    , UINT          wMsg
+    , WPARAM        wParam
+    , LPARAM        lParam
+    , LPVOID        lpClientData
+)
+{
+
+	if (SNMP_worker* p_worker = static_cast<SNMP_worker*>(lpClientData))
+	{
+		p_worker->run(/* params */);
+	}
+	return 1;
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -16,6 +37,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	unsigned long retransmitModeVal = 1;
 	unsigned long *retransmitMode = &retransmitModeVal;
 	SnmpStartup(major, minor, level, translateMode, retransmitMode);
+	HSNMP_SESSION sess;
+	HWND hsession;
+	UINT msg;
+
+	SNMP_worker worker;
+
+	HSNMP_SESSION session = SnmpCreateSession(NULL, 0, &SNcallback, (void*)&worker);
+
 
 	printf("%lu, %lu\n", *major, *minor);
 	printf("%p, %p\n", (void *)major, (void *)minor);
@@ -27,5 +56,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	SnmpRecvMsg(
 	SnmpMgrClose(ptr);
 	*/
+
+	SnmpCleanup();
 	return 0;
 }

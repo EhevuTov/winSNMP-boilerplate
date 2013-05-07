@@ -39,13 +39,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	SnmpStartup(major, minor, level, translateMode, retransmitMode);
 	HSNMP_SESSION sess;
 	HWND hsession;
+	HSNMP_ENTITY entity;
+	SNMPAPI_STATUS status;
+	LPCSTR string = "entityName";
 	UINT msg;
 
 	SNMP_worker worker;
 
 	HSNMP_SESSION session = SnmpCreateSession(NULL, 0, &SNcallback, (void*)&worker);
 
-
+	entity = SnmpStrToEntity(session, string);
+	status = SnmpListen(entity, status);
 	printf("%lu, %lu\n", *major, *minor);
 	printf("%p, %p\n", (void *)major, (void *)minor);
 	/*

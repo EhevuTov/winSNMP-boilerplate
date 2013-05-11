@@ -26,6 +26,7 @@ SNMPAPI_STATUS CALLBACK SNcallback(
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	
 	unsigned long majorVal = 1;
 	unsigned long *major = &majorVal;
 	unsigned long minorVal = 1;
@@ -37,19 +38,37 @@ int _tmain(int argc, _TCHAR* argv[])
 	unsigned long retransmitModeVal = 1;
 	unsigned long *retransmitMode = &retransmitModeVal;
 	SnmpStartup(major, minor, level, translateMode, retransmitMode);
-	HSNMP_SESSION sess;
 	HWND hsession;
-	HSNMP_ENTITY entity;
-	SNMPAPI_STATUS status;
+	HSNMP_ENTITY entDest; char destIP[] = "192.168.1.1";
+	HSNMP_ENTITY entSrc; char srcIP[] = "192.168.1.2";
+	HSNMP_CONTEXT hContext;char Ctx[]="public";
+	SNMPAPI_STATUS status = 0;
 	LPCSTR string = "entityName";
 	UINT msg;
-
+	LPHSNMP_PDU PDU = 0;
+	LPHSNMP_VBL varbind_lst;
+	LPHSNMP_CONTEXT context;
+	smiLPINT PDU_typ, r_id, error_stat, error_index;
+	smiOCTETS dContext;
+	smiOID dName;
+	smiVALUE dValue;
 	SNMP_worker worker;
 
 	HSNMP_SESSION session = SnmpCreateSession(NULL, 0, &SNcallback, (void*)&worker);
 
-	entity = SnmpStrToEntity(session, string);
-	status = SnmpListen(entity, status);
+	entDest = SnmpStrToEntity(session, destIP);
+	entSrc  = SnmpStrToEntity(session, srcIP);
+	dContext.ptr=(smiLPBYTE)Ctx;
+	dContext.len=strlen(Ctx);
+	hContext= SnmpStrToContext(session,&dContext);
+	printf("entity return: %i\n", entDest);
+	status = SnmpListen(entDest, status);
+	printf("listen return: %i\n", status);
+	while (status = SnmpRecvMsg(session, &entSrc, &entDest, context, PDU) ) {
+		printf("recv return: %i\n", status);
+		printf("PDU: %s\n", PDU);
+	};
+	SnmpGetPduData(PDU, PDU_typ, r_id, error_stat, error_index, varbind_lst);
 	printf("%lu, %lu\n", *major, *minor);
 	printf("%p, %p\n", (void *)major, (void *)minor);
 	/*
